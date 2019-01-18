@@ -1,120 +1,34 @@
-// Drawn from https://p5js.org/examples/simulate-penrose-tiles.html
-// This is a port by David Blitz of the "Penrose Tile" example from processing.org/examples
-
-var ds;
-
 function setup() {
-  createCanvas(710, 400);
-  ds = new PenroseLSystem();
-  //please, play around with the following line
-  ds.simulate(5);
+	//canvas
+  createCanvas(550, 550);
+	background(94, 178, 224);
 }
 
 function draw() {
-  background(0);
-  ds.render();
+	//title
+	fill(0);
+	textSize(40);
+	text("Vancouver", 40, 75); 
+	//shapes
+	var x = 0
+	var y = 0
+	strokeWeight(1);
+	fill(65, 193, 68);
+	beginShape();
+	vertex(50+x, 200+y); //left top
+	vertex(150+x, 450+y); //left bottom
+	vertex(325+x, 490+y); // bottom middle
+	vertex(550+x, 450+y); //right bottom
+	vertex(550+x, 200+y); //right top
+	vertex(400+x, 200+y); // triangle right
+	vertex(300+x, 100+y); //triangle point
+	vertex(275+x, 200+y); //triangle left
+	vertex(50+x, 200+y); //left top
+	endShape();
+	//circle 1
+	fill(244, 122, 66);
+	ellipse(200+x, 250+y, 50, 50);
+	//circle 2
+  fill(244, 122, 66);
+	ellipse(405+x, 405+y, 71, 71);
 }
-
-function PenroseLSystem() {
-    this.steps = 0;
-
-   //these are axiom and rules for the penrose rhombus l-system
-   //a reference would be cool, but I couldn't find a good one
-    this.axiom = "[X]++[X]++[X]++[X]++[X]";
-    this.ruleW = "YF++ZF----XF[-YF----WF]++";
-    this.ruleX = "+YF--ZF[---WF--XF]+";
-    this.ruleY = "-WF++XF[+++YF++ZF]-";
-    this.ruleZ = "--YF++++WF[+ZF++++XF]--XF";
-
-    //please play around with the following two lines
-    this.startLength = 460.0;
-    this.theta = TWO_PI / 10.0; //36 degrees, try TWO_PI / 6.0, ...
-    this.reset();
-}
-
-PenroseLSystem.prototype.simulate = function (gen) {
-  while (this.getAge() < gen) {
-    this.iterate(this.production);
-  }
-}
-
-PenroseLSystem.prototype.reset = function () {
-    this.production = this.axiom;
-    this.drawLength = this.startLength;
-    this.generations = 0;
-  }
-
-PenroseLSystem.prototype.getAge = function () {
-    return this.generations;
-  }
-
-//apply substitution rules to create new iteration of production string
-PenroseLSystem.prototype.iterate = function() {
-    var newProduction = "";
-
-    for(var i=0; i<this.production.length; ++i) {
-      var step = this.production.charAt(i);
-      //if current character is 'W', replace current character
-      //by corresponding rule
-      if (step == 'W') {
-        newProduction = newProduction + this.ruleW;
-      }
-      else if (step == 'X') {
-        newProduction = newProduction + this.ruleX;
-      }
-      else if (step == 'Y') {
-        newProduction = newProduction + this.ruleY;
-      }
-      else if (step == 'Z') {
-        newProduction = newProduction + this.ruleZ;
-      }
-      else {
-        //drop all 'F' characters, don't touch other
-        //characters (i.e. '+', '-', '[', ']'
-        if (step != 'F') {
-          newProduction = newProduction + step;
-        }
-      }
-    }
-
-    this.drawLength = this.drawLength * 0.5;
-    this.generations++;
-    this.production = newProduction;
-}
-
-//convert production string to a turtle graphic
-PenroseLSystem.prototype.render = function () {
-    translate(width/2, height/2);
-
-    this.steps += 20;
-    if(this.steps > this.production.length) {
-      this.steps = this.production.length;
-    }
-
-    for(var i=0; i<this.steps; ++i) {
-      var step = this.production.charAt(i);
-
-      //'W', 'X', 'Y', 'Z' symbols don't actually correspond to a turtle action
-      if( step == 'F') {
-        stroke(255, 60);
-        for(var j=0; j < this.repeats; j++) {
-          line(0, 0, 0, -this.drawLength);
-          noFill();
-          translate(0, -this.drawLength);
-        }
-        this.repeats = 1;
-      }
-      else if (step == '+') {
-        rotate(this.theta);
-      }
-      else if (step == '-') {
-        rotate(-this.theta);
-      }
-      else if (step == '[') {
-        push();
-      }
-      else if (step == ']') {
-        pop();
-      }
-    }
-  }

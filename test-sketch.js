@@ -29,6 +29,6 @@ function draw() {
 	fill(244, 122, 66);
 	ellipse(200, 250, 50, 50);
 	//circle 2
-  fill(244, 122, 66);
-	ellipse(405+x, 405+y, 71, 71);
+ 	fill(244, 122, 66);
+	ellipse(405, 405, 71, 71);
 }

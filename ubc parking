@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>UBC Parking</title>
+	<meta charset="utf-8" />
+
+	<!-- Leaflet styles and code. Place in the <head></head> element. -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css" />
+	<script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
+
+	<!-- jQuery is a library that simplifies many things in JavaScript.
+	     We'll use it to retrieve data from the web. -->
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+
+</head>
+<body>
+
+  <div id="mapid" style="width: 700px; height: 700px;"></div>
+	<!-- Our web map will get placed into this div element -->
+
+  <script>
+
+    // Make a Leaflet map with L.map().
+    // Store the map in the variable 'map'.
+    // "mapid" is the 'id' of the DOM element to contain the map.
+    var map = L.map('mapid',
+                    {
+      								center: [49.259, -123.245908],
+      								zoom: 14.4
+    								}  // this object holds map options
+              );
+
+			var OpenStreetMap_HOT = L.tileLayer(
+												'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+												{
+													maxZoom: 19,
+													attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, Tiles courtesy of <a href="http://hot.openstreetmap.org/" target="_blank">Humanitarian OpenStreetMap Team</a>'
+												}
+											).addTo(map);
+		//var topoTiles = L.tileLayer(
+    //  								'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+    //                  {
+		//										maxZoom: 17,
+		//										attribution: 'Basemap data: &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, <a href="http://viewfinderpanoramas.org">SRTM</a> | Basemap style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+		//									}
+		//								).addTo(map);
+
+    // load GeoJSON from a file on the web
+    // $ is jQuery.
+
+    var parkingMarkerOptions = {
+    	radius: 4,
+    	fillColor: "#FF0000",
+    	color: "#000",
+    	weight: 1,
+    	opacity: 1,
+    	fillOpacity: 1
+		};
+
+    function onEachParking(feature, layer) {
+      // does this parking have a property named FAC_DESCRIPTION?
+       if (feature.properties && feature.properties.FAC_DESCRIPTION) {
+          layer.bindTooltip(feature.properties.FAC_DESCRIPTION);
+       }
+    }
+
+		$.getJSON("https://raw.githubusercontent.com/UBCGeodata/ubcv-parking/master/geojson/ubcv_parking_www.geojson",
+              function(data){
+    						// Once UBC trees GeoJSON layer is loaded
+      					// Then add it to the map
+    						L.geoJSON(data,
+									{
+   								  pointToLayer: function (feature, latlng) {
+        							               return L.circleMarker(
+                                       latlng,
+                                       parkingMarkerOptions
+                                     );
+    							                },
+                    onEachFeature: onEachParking
+                  }
+                ).addTo(map);});
+
+
+
+  </script>
+
+</body>
+</html>

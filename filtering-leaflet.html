@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>UBC Parking</title>
+	<meta charset="utf-8" />
+
+	<!-- Leaflet styles and code. Place in the <head></head> element. -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css" />
+	<script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
+
+	<!-- jQuery is a library that simplifies many things in JavaScript.
+	     We'll use it to retrieve data from the web. -->
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+
+</head>
+<body>
+
+  <div id="mapid" style="width: 700px; height: 700px;"></div>
+	<!-- Our web map will get placed into this div element -->
+	<div id="controls" style="margin: 15px;">
+     <button id="showAllParkingButton">Show All Parking></button>
+
+     <span style="display:inline-block; width: 30px"></span>
+     <input type="text" id="highlightParkingTextEntry"
+            placeholder="parking location">
+     <button id="highlightParkingButton">Highlight</button>
+
+ 	</div>
+
+  <script>
+
+    // Make a Leaflet map with L.map().
+    // Store the map in the variable 'map'.
+    // "mapid" is the 'id' of the DOM element to contain the map.
+    var map = L.map('mapid',
+                    {
+      								center: [49.259, -123.245908],
+      								zoom: 14.4
+    								}  // this object holds map options
+              );
+
+			var OpenStreetMap_HOT = L.tileLayer(
+												'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+												{
+													maxZoom: 19,
+													attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, Tiles courtesy of <a href="http://hot.openstreetmap.org/" target="_blank">Humanitarian OpenStreetMap Team</a>'
+												}
+											).addTo(map);
+		//var topoTiles = L.tileLayer(
+    //  								'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+    //                  {
+		//										maxZoom: 17,
+		//										attribution: 'Basemap data: &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, <a href="http://viewfinderpanoramas.org">SRTM</a> | Basemap style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+		//									}
+		//								).addTo(map);
+
+    // load GeoJSON from a file on the web
+    // $ is jQuery.
+
+    var parkingMarkerOptions = {
+    	radius: 4,
+    	fillColor: "#0000FF", // blue
+    	color: "#000",
+    	weight: 1,
+    	opacity: 1,
+    	fillOpacity: 1
+		};
+
+
+	 var parkingMarkerHighlightedOptions = {
+		 radius: 4,
+		 fillColor: "#FF0000",  // Make highlighted trees red.
+		 color: "#000",
+		 weight: 1,
+		 opacity: 1,
+		 fillOpacity: 1
+	 };
+
+
+    function onEachParking(feature, layer) {
+      // does this parking have a property named FAC_DESCRIPTION?
+       if (feature.properties && feature.properties.FAC_DESCRIPTION) {
+          layer.bindTooltip(feature.properties.FAC_DESCRIPTION);
+       }
+    }
+
+		function parkingPointToLayer(feature, latlng) {
+
+      // the next conditional lets us differentiate between the
+      // styling we use when we are highlighting a particular genus
+      // of trees versus when we are displaying all trees.
+
+      if (parkingToHighlight === "") {
+        parkingMarkerOptionsToUse = parkingMarkerOptions;
+      } else {
+        parkingMarkerOptionsToUse = parkingMarkerHighlightedOptions;
+      }
+
+      // for the current feature, make a circleMarker.
+      return L.circleMarker(
+        latlng,
+        parkingMarkerOptionsToUse
+      );
+    }
+
+    function parkingToFilter (feature, layer) {
+      if(parkingToHighlight === "") {
+        return true;
+        // In this case, we're not highlighting anything, so draw everything.
+      }
+      else if (feature.properties && feature.properties.FAC_DESCRIPTION) {
+        // We just checked to make sure there are properties to avoid an error
+        //   by asking for the .FAC_DESCRIPTION when there are no properties.
+        // Now, we need to check to see if the .FAC_DESCRIPTION matches what we're
+        //   trying to highlight.
+        return parkingToHighlight.toLowerCase() === feature.properties.FAC_DESCRIPTION.toLowerCase();
+				// We ignore uppercase/lowercase differences.
+      } else {
+        return false;
+        // This is for features that lack properties.
+        // Don't display them.
+      }
+    }
+
+ 		var lastLayerAdded = {};
+    // Keeping track of lastLayerAdded lets us reset the map layers
+    // being shown so we don’t keep on layering new data on old.
+
+    function addParking() {
+      if(map.hasLayer(lastLayerAdded)){  // reset the map layers if relevant.
+        map.removeLayer(lastLayerAdded);
+      }
+      lastLayerAdded = L.geoJSON(parkingGeoJSONdata, {
+   												pointToLayer: parkingPointToLayer,
+                 				  onEachFeature: onEachParking,
+          								filter: parkingToFilter
+        										// filter out parking we aren't looking for,
+        										//   if any.
+      									 }
+                       );
+      lastLayerAdded.addTo(map);
+    };
+
+    var parkingToHighlight = "";
+    // This is set by someone pressing the highlight button.
+    // If it's an empty string, then just draw everything.
+
+    function highlightParking() {
+    	parkingToHighlight = document
+    												.getElementById("highlightParkingTextEntry")
+      											.value;  // get any text from the input box.
+      addParking(); // add the trees.
+      parkingToHighlight = "";  // reset so that "Show All Parking" works.
+    }
+
+		var parkingGeoJSONdata; // Where we store parking GeoJSON data
+
+		$.getJSON("https://raw.githubusercontent.com/UBCGeodata/ubcv-parking/master/geojson/ubcv_parking_www.geojson",
+              function(data){
+    						// Once UBC trees GeoJSON layer is loaded
+      					// Then add it to the map
+								parkingGeoJSONdata = data;
+								// Create event listener for ShowAllParking Button:
+								document
+									.getElementById("showAllParkingButton")
+									.addEventListener("click", addParking);
+								// Create event listener for the highlightTrees Button:
+								document
+									.getElementById("highlightParkingButton")
+									.addEventListener("click", highlightParking);
+								   }
+								);
+
+
+	</script>
+
+</body>
+</html>

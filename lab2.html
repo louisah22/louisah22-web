@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!--Loaded Mapbox.js and CSS. Mapbox.js is a plugin for Leaflet.-->
+  <meta charset=utf-8 />
+  <title>Canada's International Airports</title>
+  <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700' rel='stylesheet'>
+  <script src='https://api.mapbox.com/mapbox.js/v3.1.1/mapbox.js'></script>
+  <link href='https://api.mapbox.com/mapbox.js/v3.1.1/mapbox.css' rel='stylesheet' />
+
+  <style>
+  /* Button styling */
+  #fit {
+        display: block;
+        position: absolute;
+        top: 12px;
+        right: 10px;
+        margin: 0px auto;
+        width: 140px;
+        height: 40px;
+        padding: 10px;
+        border: none;
+        border-radius: 3px;
+        font-size: 12px;
+        text-align: center;
+        color: rgba(119, 117, 117, 0.9);
+        background: rgb(255, 255, 255);
+        }
+
+/* Styling text and many menu details */
+  body {
+    color:#404040;
+    font:400 15px/22px 'Source Sans Pro', 'Helvetica Neue', Sans-serif;
+    margin:0;
+    padding:0;
+    -webkit-font-smoothing:antialiased;
+  }
+  * {
+    -webkit-box-sizing:border-box;
+    -moz-box-sizing:border-box;
+    box-sizing:border-box;
+  }
+  h1 {
+    font-size:20px;
+    margin:0;
+    font-weight:400;
+  }
+  a {
+    color:#404040;
+    text-decoration:none;
+  }
+  a:hover { color:#101010; }
+
+  .sidebar {
+    position:absolute;
+    width:20%;
+    height:100%;
+    top:0;left:0;
+    overflow:hidden;
+    border-right:1px solid rgba(0,0,0,0.25);
+  }
+  .pad2 {
+    padding:20px;
+  }
+  .quiet {
+    color:#888;
+  }
+  .map {
+    position:absolute;
+    left:20%;
+    width:80%;
+    top:0;bottom:0;
+  }
+  .heading {
+    background:#fff;
+    border-bottom:1px solid #eee;
+    height:60px;
+    line-height:60px;
+    padding:0 10px;
+  }
+  .listings {
+    height:100%;
+    overflow:auto;
+    padding-bottom:60px;
+  }
+  .listings .item {
+    display:block;
+    border-bottom:1px solid #eee;
+    padding:10px;
+    text-decoration:none;
+  }
+  .listings .item:last-child { border-bottom:none; }
+  .listings .item .title {
+    display:block;
+    color:#00853e;
+    font-weight:700;
+  }
+  .listings .item .title small { font-weight:400; }
+  .listings .item.active .title,
+  .listings .item .title:hover { color:#8cc63f; }
+  .listings .item.active {
+    background-color:#f8f8f8;
+  }
+
+  ::-webkit-scrollbar {
+    width:3px;
+    height:3px;
+    border-left:0;
+    background:rgba(0,0,0,0.1);
+  }
+  ::-webkit-scrollbar-track {
+    background:none;
+  }
+  ::-webkit-scrollbar-thumb {
+    background:#00853e;
+    border-radius:0;
+  }
+
+  .clearfix { display:block; }
+  .clearfix:after {
+    content:'.';
+    display:block;
+    height:0;
+    clear:both;
+    visibility:hidden;
+  }
+
+  /* Popup styling */
+  .leaflet-popup-close-button {
+    display:none;
+  }
+  .leaflet-popup-content {
+    font:400 15px/22px 'Source Sans Pro', 'Helvetica Neue', Sans-serif;
+    padding:0;
+    width:200px;
+  }
+  .leaflet-popup-content-wrapper {
+    padding:0;
+  }
+  .leaflet-popup-content h3 {
+    background:#91c949;
+    color:#fff;
+    margin:0;
+    display:block;
+    padding:10px;
+    border-radius:3px 3px 0 0;
+    font-weight:700;
+    margin-top:-15px;
+  }
+  .leaflet-popup-content h2 {
+    background:#636363;
+    color:#fff;
+    margin:0;
+    display:block;
+    padding:10px;
+    border-radius:3px 3px 0 0;
+    font-weight:700;
+    margin-top:-15px;
+  }
+  .leaflet-popup-content div {
+    padding:10px;
+}
+  }
+  .leaflet-container .leaflet-marker-icon { cursor:pointer; }
+  </style>
+</head>
+
+<body>
+
+  <div class='sidebar'>
+    <div class='heading'>
+      <h1>Canada's International Airports</h1>
+    </div>
+<!--Established id for a button, map, and menu.
+    Can put the various elements that follow into the different ids.-->
+    <div id='listings' class='listings'></div>
+  </div>
+  <div id='map' class='map'> </div>
+  <button id='fit'>Back to overview</button>
+
+<script>
+// Coding all of the lodging points. Stating location and marker specificiations.
+L.mapbox.accessToken = 'pk.eyJ1IjoibG91aXNhaDIyIiwiYSI6ImNqcjQ5Z3F3aDAxbWY0NW8yaG5pZ2ZjbzMifQ.UvIJ1RCjTlZvV35u4_1qnw';
+  var lodging = [
+      {
+        "type": "FeatureCollection",
+        "features": [
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -114.008407,
+            51.131088
+          ]
+        },
+        "properties": {
+          'lodging': 'Delta Hotels by Marriott Calgary Airport In-Terminal',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+          "type": "Feature",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              -113.980137,
+              51.111867
+            ]
+          },
+          "properties": {
+            'lodging': 'Radisson Hotel & Conference Centre Calgary Airport',
+            'marker-color': '#636363',
+            'marker-size': 'small',
+            'marker-symbol': 'lodging'
+            }
+          }, {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -114.012018,
+                51.143084
+              ]
+            },
+            "properties": {
+              'lodging': 'Hampton Inn by Hilton Calgary Airport North',
+              'marker-color': '#636363',
+              'marker-size': 'small',
+              'marker-symbol': 'lodging'
+              }
+            }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -113.542893,
+            53.30781
+          ]
+        },
+        "properties": {
+          'lodging': 'Executive Royal Hotel',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+          "type": "Feature",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              -113.538151,
+              53.310035
+            ]
+          },
+          "properties": {
+            'lodging': 'Holiday Inn Express & Suites Edmonton-International Airport',
+            'marker-color': '#636363',
+            'marker-size': 'small',
+            'marker-symbol': 'lodging'
+            }
+          }, {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -113.531629,
+                53.308263
+              ]
+            },
+            "properties": {
+              'lodging': 'Hampton Inn & Suites by Hilton Edmonton International Airport',
+              'marker-color': '#636363',
+              'marker-size': 'small',
+              'marker-symbol': 'lodging'
+              }
+            }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -135.083670,
+            60.713755
+          ]
+        },
+        "properties": {
+          'lodging': 'Skky Hotel',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+          "type": "Feature",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              -135.057725,
+              60.718530
+            ]
+          },
+          "properties": {
+            'lodging': 'Best Western Gold Rush Inn',
+            'marker-color': '#636363',
+            'marker-size': 'small',
+            'marker-symbol': 'lodging'
+            }
+          }, {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -135.058587,
+                60.720994
+              ]
+            },
+            "properties": {
+              'lodging': 'Stratford Motel',
+              'marker-color': '#636363',
+              'marker-size': 'small',
+              'marker-symbol': 'lodging'
+              }
+          }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -66.565640,
+            45.853451
+          ]
+        },
+        "properties": {
+          'lodging': 'Travelodge by Wyndham Fredericton',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -66.558168,
+          45.894080
+        ]
+      },
+      "properties": {
+        'lodging': 'Airport Inn',
+        'marker-color': '#636363',
+        'marker-size': 'small',
+        'marker-symbol': 'lodging'
+        }
+      }, {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -66.508706,
+          45.842150
+        ]
+      },
+      "properties": {
+        'lodging': 'Days Inn & Conference Centre by Wyndham Oromocto',
+        'marker-color': '#636363',
+        'marker-size': 'small',
+        'marker-symbol': 'lodging'
+        }
+      }, {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -54.620223,
+          48.952165
+        ]
+      },
+      "properties": {
+        'lodging': 'Albatross Hotel',
+        'marker-color': '#636363',
+        'marker-size': 'small',
+        'marker-symbol': 'lodging'
+        }
+      }, {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -54.615091,
+          48.949301
+        ]
+      },
+      "properties": {
+        'lodging': 'Quality Hotel & Suites',
+        'marker-color': '#636363',
+        'marker-size': 'small',
+        'marker-symbol': 'lodging'
+        }
+      }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -54.605372,
+            48.952969
+          ]
+        },
+        "properties": {
+          'lodging': "Sinbad's Hotel & Suites",
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+             -64.708133,
+            46.108767
+          ]
+        },
+        "properties": {
+          'lodging': 'Holiday Inn Express & Suites Dieppe Airport',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+          "type": "Feature",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              -64.714207,
+              46.112540
+            ]
+          },
+          "properties": {
+            'lodging': 'Fairfield Inn & Suites by Marriott Moncton',
+            'marker-color': '#636363',
+            'marker-size': 'small',
+            'marker-symbol': 'lodging'
+            }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -64.706336,
+            46.102755
+          ]
+        },
+        "properties": {
+          'lodging': 'Quality Inn Airport',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -63.516287,
+            44.886280
+          ]
+        },
+        "properties": {
+          'lodging': 'Alt Hotel Halifax Airport',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -63.534649,
+            44.875524
+          ]
+        },
+        "properties": {
+          'lodging': 'Quality Inn Halifax Airport',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -63.545574,
+            44.861379
+          ]
+        },
+        "properties": {
+          'lodging': 'Holiday Inn Express & Suites Halifax Airport',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -68.528845,
+            63.748630
+          ]
+        },
+        "properties": {
+          'lodging': "The Discovery - Iqaluit's Boutique Hotel",
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -68.522689,
+            63.74848
+          ]
+        },
+        "properties": {
+          'lodging': 'Capital Suites - Iqaluit',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -68.479761,
+            63.734341
+          ]
+        },
+        "properties": {
+          'lodging': 'Accommodations By the Sea',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -73.723551,
+            45.461330
+          ]
+        },
+        "properties": {
+          'lodging': 'Holiday Inn Express & Suites Montréal Airport',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -73.698994,
+            45.480003
+          ]
+        },
+        "properties": {
+          'lodging': 'Travelodge by Wyndham Montréal Airport',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -73.732754,
+            45.454837
+          ]
+        },
+        "properties": {
+          'lodging': 'Comfort Inn Aéroport',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -75.652207,
+            45.328193
+          ]
+        },
+        "properties": {
+          'lodging': 'Hilton Garden Inn Ottawa Airport',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -75.683232,
+            45.337467
+          ]
+        },
+        "properties": {
+          'lodging': 'Days Inn by Wyndham Ottawa Airport',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -75.701229,
+            45.328049
+          ]
+        },
+        "properties": {
+          'lodging': 'Ramada by Wyndham Ottawa on the Rideau',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -71.353090,
+            46.788253
+          ]
+        },
+        "properties": {
+          'lodging': 'Comfort Inn Airport East',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -71.366755,
+            46.782110
+          ]
+        },
+        "properties": {
+          'lodging': 'Super 8 by Wyndham Québec City',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -71.352243,
+            46.790872
+          ]
+        },
+        "properties": {
+          'hotel': 'Grand Times Hotel',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+             -104.645070,
+            50.402799
+          ]
+        },
+        "properties": {
+          'lodging': 'Days Inn by Wyndham Regina Airport West',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -104.641802,
+            50.454354
+          ]
+        },
+        "properties": {
+          'lodging': 'Residence Inn by Marriott Regina',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -104.616097,
+            50.454591
+          ]
+        },
+        "properties": {
+          'lodging': 'Four Point by Sheraton Regina',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -106.683762,
+            52.191441
+          ]
+        },
+        "properties": {
+          'lodging': 'Comfort Suites Saskatoon',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -106.668898,
+            52.159457
+          ]
+        },
+        "properties": {
+          'lodging': 'Comfort Inn',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -106.684694,
+            52.155231
+          ]
+        },
+        "properties": {
+          'lodging': 'Heritage Inn Hotel & Convention Centre',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -52.751920,
+            47.612751
+          ]
+        },
+        "properties": {
+          'lodging': "Holiday Inn Express & Suites St. John's Airport",
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -52.741102,
+            47.606381
+          ]
+        },
+        "properties": {
+          'lodging': 'Comfort Inn Airport',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -52.728105,
+            47.595030
+          ]
+        },
+        "properties": {
+          'lodging': "Super 8 by Wyndham St. John's",
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -79.591495,
+            43.679045
+          ]
+        },
+        "properties": {
+          'lodging': 'Best Western Premier Toronto Airport Carlingview Hotel',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -79.583851,
+            43.690354
+          ]
+        },
+        "properties": {
+          'lodging': 'Crown Plaza Toronto Airport',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -79.600898,
+            43.652266
+          ]
+        },
+        "properties": {
+          'lodging': 'Hampton Inn by Hilton Toronto Airport Corporate Centre',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -123.176,
+            49.195250
+          ]
+        },
+        "properties": {
+          'lodging': 'Fairmont Vancouver Airport',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -123.130847,
+            49.205009
+          ]
+        },
+        "properties": {
+          'lodging': 'Coast Vancouver Airport Hotel',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -123.127638,
+            49.192680
+          ]
+        },
+        "properties": {
+          'lodging': 'Days Inn by Wyndham Vancouver Airport',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -123.403355,
+            48.649461
+          ]
+        },
+        "properties": {
+          'lodging': 'Best Western Plus Emerald Isle Hotel',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -123.405222,
+            48.649380
+          ]
+        },
+        "properties": {
+          'lodging': 'Travelodge by Wyndham Victoria Airport',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -123.397966,
+            48.647228
+          ]
+        },
+        "properties": {
+          'lodging': 'Beacon Inn at Sidney',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -97.203486,
+            49.902440
+          ]
+        },
+        "properties": {
+          'lodging': 'Best Western Plus Winnipeg Airport Hotel',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -97.224959,
+            49.904855
+          ]
+        },
+        "properties": {
+          'lodging': 'The Grand Winnipeg Airport Hotel',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }, {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -97.208948,
+            49.900764
+          ]
+        },
+        "properties": {
+          'lodging': 'Hilton Winnipeg Airport Suites',
+          'marker-color': '#636363',
+          'marker-size': 'small',
+          'marker-symbol': 'lodging'
+          }
+        }
+  ]
+  }
+  ];
+
+  // Sets style of the map to light. Sets coordinates and zoom of initial view.
+    var map = L.mapbox.map('map', 'mapbox.light').setView([59.25, -97], 4);
+    document.getElementById('fit').addEventListener('click', function() {
+        map.fitBounds([[45, -145],[70, -50]]);
+       });
+
+  // Adding lodging to the map.
+  var myLayer = L.mapbox.featureLayer().setGeoJSON(lodging).addTo(map);
+  var locations = L.mapbox.featureLayer().addTo(map);
+  locations.setGeoJSON(lodging);
+
+  locations.eachLayer(function(locale) {
+
+  // Shorten locale.feature.properties to just `prop` for simplicity
+  var prop = locale.feature.properties;
+
+  // The content for airport popup attached to the markers
+  var lodgingpopup = '<h2>Lodging</h2><div>' + prop.lodging;
+
+  // Airport marker interactivity
+  locale.on('click', function(e) {
+
+  // Binds popup to marker
+  lodgingpopup += '</div>';
+  locale.bindPopup(lodgingpopup);
+  });
+});
+</script>
+
+<script>
+// Made use of another <script> for properly running certain interactive components.
+    // Before with only one <script> some elements of interactivity failed to to work.
+// Coding all of the airport points. Stating location and marker specificiations.
+  var airports = [
+      {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -114.006734,
+                51.130701
+              ]
+            },
+            "properties": {
+              "Name": "Calgary International Airport",
+              "Code": "YYC",
+              "Timezone": "GMT -7:00",
+              'marker-color': '#00853e',
+              'marker-size': 'medium',
+              'marker-symbol': 'airport'
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -113.582784,
+                53.306533
+              ]
+            },
+            "properties": {
+              "Name": "Edmonton International Airport",
+              "Code": "YEG",
+              "Timezone": "GMT -7:00",
+              'marker-color': '#00853e',
+              'marker-size': 'medium',
+              'marker-symbol': 'airport'
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -135.076575,
+                60.714465
+              ]
+            },
+            "properties": {
+              "Name": "Erik Nielsen Whitehorse International Airport",
+              "Code": "YXY",
+              "Timezone": "GMT -8:00",
+              'marker-color': '#00853e',
+              'marker-size': 'medium',
+              'marker-symbol': 'airport'
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -66.529651,
+                45.872944
+              ]
+            },
+            "properties": {
+              "Name": "Fredericton International Airport",
+              "Code": "YFC",
+              "Timezone": "GMT -4:00",
+              'marker-color': '#00853e',
+              'marker-size': 'medium',
+              'marker-symbol': 'airport'
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -54.575411,
+                48.946662
+              ]
+            },
+            "properties": {
+              "Name": "Gander International Airport",
+              "Code": "YQX",
+              "Timezone": "GMT -3:30",
+              'marker-color': '#00853e',
+              'marker-size': 'medium',
+              'marker-symbol': 'airport'
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -64.688384,
+                46.116286
+              ]
+            },
+            "properties": {
+              "Name": "Greater Moncton Roméo LeBlanc International Airport",
+              "Code": "YQM",
+              "Timezone": "GMT -4:00",
+              'marker-color': '#00853e',
+              'marker-size': 'medium',
+              'marker-symbol': 'airport'
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -63.515024,
+                44.886907
+              ]
+            },
+            "properties": {
+              "Name": "Halifax Stanfield International Airport",
+              "Code": "YHZ",
+              "Timezone": "GMT -4:00",
+              'marker-color': '#00853e',
+              'marker-size': 'medium',
+              'marker-symbol': 'airport'
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -68.555881,
+                63.756443
+              ]
+            },
+            "properties": {
+              "Name": "Iqaluit International Airport",
+              "Code": "YFB",
+              "Timezone": "GMT -5:00",
+              'marker-color': '#00853e',
+              'marker-size': 'medium',
+              'marker-symbol': 'airport'
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -73.751881,
+                45.458087
+              ]
+            },
+            "properties": {
+              "Name": "Montréal-Pierre Elliott Trudeau International Airport",
+              "Code": "YUL",
+              "Timezone": "GMT -5:00",
+              'marker-color': '#00853e',
+              'marker-size': 'medium',
+              'marker-symbol': 'airport'
+            }
+          }, {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -75.667177,
+                45.322807
+              ]
+            },
+            "properties": {
+              "Name": "Ottawa International Airport",
+              "Code": "YOW",
+              "Timezone": "GMT -5:00",
+              'marker-color': '#00853e',
+              'marker-size': 'medium',
+              'marker-symbol': 'airport'
+            }
+          }, {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -71.383866,
+                46.791613
+              ]
+            },
+            "properties": {
+              "Name": "Québec City Jean Lesage International Airport",
+              "Code": "YQB",
+              "Timezone": "GMT -5:00",
+              'marker-color': '#00853e',
+              'marker-size': 'medium',
+              'marker-symbol': 'airport'
+            }
+          }, {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -104.656027,
+                50.433535
+              ]
+            },
+            "properties": {
+              "Name": "Regina International Airport",
+              "Code": "YQR",
+              "Timezone": "GMT -6:00",
+              'marker-color': '#00853e',
+              'marker-size': 'medium',
+              'marker-symbol': 'airport'
+            }
+          }, {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -106.690842,
+                52.169991
+              ]
+            },
+            "properties": {
+              "Name": "Saskatoon John G. Diefenbaker International Airport",
+              "Code": "YXE",
+              "Timezone": "GMT -6:00",
+              'marker-color': '#00853e',
+              'marker-size': 'medium',
+              'marker-symbol': 'airport'
+            }
+          }, {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -52.741877,
+                47.620673
+              ]
+            },
+            "properties": {
+              "Name": "St. John's International Airport",
+              "Code": "YYT",
+              "Timezone": "GMT -3:30",
+              'marker-color': '#00853e',
+              'marker-size': 'medium',
+              'marker-symbol': 'airport'
+            }
+          }, {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -79.615588,
+                43.68215
+              ]
+            },
+            "properties": {
+              "Name": "Toronto Pearson International Airport",
+              "Code": "YYZ",
+              "Timezone": "GMT -5:00",
+              'marker-color': '#00853e',
+              'marker-size': 'medium',
+              'marker-symbol': 'airport'
+            }
+          }, {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -123.179413,
+                49.194579
+              ]
+            },
+            "properties": {
+              "Name": "Vancouver International Airport",
+              "Code": "YVR",
+              "Timezone": "GMT -8:00",
+              'marker-color': '#00853e',
+              'marker-size': 'medium',
+              'marker-symbol': 'airport'
+            }
+          }, {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -123.430381,
+                48.640695
+              ]
+            },
+            "properties": {
+              "Name": "Victoria International Airport",
+              "Code": "YYJ",
+              "Timezone": "GMT -8:00",
+              'marker-color': '#00853e',
+              'marker-size': 'medium',
+              'marker-symbol': 'airport'
+            }
+          }, {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -97.223581,
+                49.90496
+              ]
+            },
+            "properties": {
+              "Name": "Winnipeg James Armstrong Richardson International Airport",
+              "Code": "YWG",
+              "Timezone": "GMT -6:00",
+              'marker-color': '#00853e',
+              'marker-size': 'medium',
+              'marker-symbol': 'airport'
+            }
+          },
+        ]
+      }
+  ];
+
+// Adding airports to the map
+  var myLayer = L.mapbox.featureLayer().setGeoJSON(airports).addTo(map);
+  var listings = document.getElementById('listings');
+  var locations = L.mapbox.featureLayer().addTo(map);
+  locations.setGeoJSON(airports);
+
+// Finds pairs of data with the same name (ie/ marker on map and menu).
+function setActive(el) {
+  var siblings = listings.getElementsByTagName('div');
+  for (var i = 0; i < siblings.length; i++) {
+    siblings[i].className = siblings[i].className
+    .replace(/active/, '').replace(/\s\s*$/, '');
+  }
+  el.className += ' active';
+}
+
+  locations.eachLayer(function(locale) {
+
+// Shorten locale.feature.properties to just `prop` for simplicity
+  var prop = locale.feature.properties;
+
+// The content for airport popup attached to the markers
+var popup = '<h3>Airport</h3><div>' + prop.Name;
+
+// Menu content
+    var listing = listings.appendChild(document.createElement('div'));
+    listing.className = 'item';
+    var link = listing.appendChild(document.createElement('a'));
+    link.href = '#';
+    link.className = 'title';
+    link.innerHTML = prop.Name;
+    var details = listing.appendChild(document.createElement('div'));
+    details.innerHTML = prop.Code;
+    var details = listing.appendChild(document.createElement('div'));
+    details.innerHTML = prop.Timezone;
+
+// Menu interactivity
+    link.onclick = function() {
+      // highlights item on menu
+      setActive(listing);
+
+      // When a menu item is clicked, animate the map to center
+      // its associated locale and open its popup.
+      map.setView(locale.getLatLng(), 13.4);
+      locale.openPopup();
+      return false;
+    };
+
+// Airport marker interactivity
+    locale.on('click', function(e) {
+
+      // Set active the listing associated with the marker when click airport markers on map.
+      setActive(listing);
+    });
+
+  // Binds popup to marker
+    popup += '</div>';
+    locale.bindPopup(popup);
+
+});
+</script>
+</body>
+</html>
